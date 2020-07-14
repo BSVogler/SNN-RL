@@ -1,0 +1,6 @@
+gym>=0.17.1.
+numpy==1.18.
+matplotlib==3.2.2
+networkx
+scikit-learn==0.22.
+mongoengine>=0.20.0

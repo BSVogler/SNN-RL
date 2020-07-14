@@ -1,0 +1,18 @@
+{
+
+	"errsig_factor": {
+		"from": 0.001,
+		"to": 0.02,
+		"steps": 5
+	},
+	"criticresolution": {
+		"from": 50,
+		"to": 400,
+		"steps": 3
+	},
+	"lateral_inhibition": {
+		"from": 100,
+		"to": 400,
+		"steps": 3
+	}
+}

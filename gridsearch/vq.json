@@ -1,0 +1,12 @@
+{
+	"vq_lr_int": {
+		"from": 1,
+		"to": 3,
+		"steps": 3
+	},
+	"vq_decay_int": {
+		"from": 1,
+		"to": 3,
+		"steps": 3
+	}
+}
