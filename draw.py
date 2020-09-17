@@ -3,22 +3,23 @@ import sys
 from typing import Dict, List, Union
 
 import matplotlib.pyplot as plt
-import nest
 import numpy as np
 
 import fremauxfilter
 from actor import Weightstorage
-from connectome import Connectome
 from globalvalues import gv
 import datetime
 from matplotlib.colors import LightSource
-import networkx as nx
 
 
-def voltage(multimeter, persp="3d"):
+def voltage(measurements, persp="3d"):
+    """
+
+    :param measurements: nest.GetStatus(multimeter)[0]["events"]
+    :param persp:
+    :return:
+    """
     # draw voltage curves
-    measurements = nest.GetStatus(multimeter)[0]["events"]
-
     fig = plt.figure(num=0, figsize=(6.5, 3.5), dpi=150)
     if persp == "3d":
         ax = fig.add_subplot(111, projection='3d')
@@ -292,14 +293,6 @@ def error_signal(utility, fig=None, persp="heat"):
     # plt.legend()
     if fig is None:
         plt.show()
-
-
-def connectome(connections):
-    graph = nx.DiGraph()
-    plt.title('Connetome after training')
-    for conn in connections:
-        graph.add_edge(conn[0], conn[1])
-    nx.draw(graph, with_labels=True, node_size=500, alpha=0.3, arrows=True)
 
 
 def utilities_over_time(utils):

@@ -2,7 +2,6 @@ from typing import List, Tuple, Union
 
 from actor import Actor, PlaceCellAnalog2ActivationLayer
 from globalvalues import gv
-from connectome import Connectome
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -21,6 +20,7 @@ class SymbolicActor(Actor):
         :param env:
         :param neuron_labels:
         """
+        super().__init__()
         self.env = env
         self.obsfactor = 1  # factors to scale observations, can be a numpy array of size of number of place cells
         # place cells
@@ -42,7 +42,6 @@ class SymbolicActor(Actor):
                                                     size=self.placeCellA2SLayer.positions.shape[0])  # default action is random
         # log
         self.lastactivation: np.array = np.array([])  # array, one hot encoded
-        self.log_m: List[float] = []  # log every cycle
         self.weightlog: List[Actor.Weightstorage] = []
         self.end_episode(-1)
         self.positive_input = False  # if input is only positive
@@ -76,6 +75,7 @@ class SymbolicActor(Actor):
 
     def release_neurotransmitter(self, amount: float):
         """update last pc"""
+        super().release_neurotransmitter(amount)
         def g(weight: float) -> float:
             #eligibility trace after foderaro et al. 2010, not very beneficial
             return 0.2+np.abs(weight*5*np.exp(-np.abs(weight)/gv.w_max))

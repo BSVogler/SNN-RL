@@ -1,4 +1,3 @@
-import nest
 import numpy as np
 import typing
 
@@ -53,36 +52,47 @@ class Settings:
     strp_min = w0_min / 4  # minimum value where a synapse is removed
     @staticmethod
     def define_stdp(vt):
-        # the time constant of the depressing window of STDP is a parameter of the post-synaptic neuron.
-        rstdp_syn_spec_exitory = {'Wmax': gv.w_max,
-                                  'Wmin': 0.0,
-                                  'delay': gv.delay,
-                                  "weight": gv.w0_min,  # will be overwritten with randomized value later
-                                  "A_plus": 1.0,
-                                  "A_minus": 1.0,
-                                  "tau_n": gv.tau_n,
-                                  "tau_c": gv.tau_c,
-                                  'vt': vt.tolist()[0]}
+        try:
+            import nest
+            # the time constant of the depressing window of STDP is a parameter of the post-synaptic neuron.
+            rstdp_syn_spec_exitory = {'Wmax': gv.w_max,
+                                      'Wmin': 0.0,
+                                      'delay': gv.delay,
+                                      "weight": gv.w0_min,  # will be overwritten with randomized value later
+                                      "A_plus": 1.0,
+                                      "A_minus": 1.0,
+                                      "tau_n": gv.tau_n,
+                                      "tau_c": gv.tau_c,
+                                      'vt': vt.tolist()[0]}
 
-        rstdp_syn_spec_inhibitory = rstdp_syn_spec_exitory.copy()
-        rstdp_syn_spec_inhibitory["Wmin"] = -gv.w_max
-        rstdp_syn_spec_inhibitory['Wmax'] = 0.0
+            rstdp_syn_spec_inhibitory = rstdp_syn_spec_exitory.copy()
+            rstdp_syn_spec_inhibitory["Wmin"] = -gv.w_max
+            rstdp_syn_spec_inhibitory['Wmax'] = 0.0
 
-        # alternative to set defaults is to create a new model from a copy
-        nest.CopyModel('stdp_dopamine_synapse', 'stdp_dopamine_synapse_ex', rstdp_syn_spec_exitory)
-        # nest.SetDefaults("stdp_dopamine_synapse_ex", rstdp_syn_spec_exitory)
-        nest.CopyModel('stdp_dopamine_synapse', 'stdp_dopamine_synapse_in', rstdp_syn_spec_inhibitory)
-        # nest.SetDefaults("stdp_dopamine_synapse_in", rstdp_syn_spec_inhibitory)
+            # alternative to set defaults is to create a new model from a copy
+            nest.CopyModel('stdp_dopamine_synapse', 'stdp_dopamine_synapse_ex', rstdp_syn_spec_exitory)
+            # nest.SetDefaults("stdp_dopamine_synapse_ex", rstdp_syn_spec_exitory)
+            nest.CopyModel('stdp_dopamine_synapse', 'stdp_dopamine_synapse_in', rstdp_syn_spec_inhibitory)
+            # nest.SetDefaults("stdp_dopamine_synapse_in", rstdp_syn_spec_inhibitory)
+        except ImportError:
+            print("Neural simulator Nest not found (import nest). Only able to run the simplified architecture.")
 
     @staticmethod
     def init():
-        # run for every process
-        # same results every run
-        nest.SetKernelStatus({"grng_seed": gv.seed})
-        # numpy seed
+        numproc = 1
+        try:
+            import nest
+            nest.ResetKernel()
+            # run for every process
+            # same results every run
+            nest.SetKernelStatus({"grng_seed": gv.seed})
+            # numpy seed
+            nest.EnableStructuralPlasticity()
+            numproc = nest.GetKernelStatus(['total_num_virtual_procs'])[0]
+        except ImportError:
+            print("Neural simulator Nest not found (import nest). Only able to run the simplified architecture.")
+
         np.random.seed(gv.seed)
-        nest.EnableStructuralPlasticity()
-        numproc = nest.GetKernelStatus(['total_num_virtual_procs'])[0]
         gv.pyrngs = [np.random.RandomState(s) for s in range(gv.seed, gv.seed + numproc)]
 
 

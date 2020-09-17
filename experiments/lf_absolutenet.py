@@ -1,15 +1,15 @@
 #this fixes exp not beeing able to import because it is not in the pythonpath
 import os,sys,inspect
 
-from critic import DynamicBaseline
-from lineFollowingEnvironment2 import LineFollowingEnv2
 
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
+from SpikingNeuroController import SpikingNeurocontroller
+from critic import DynamicBaseline
+from lineFollowingEnvironment2 import LineFollowingEnv2
 import exp
-from actor import Actor
 from globalvalues import gv
 import numpy as np
 from agent import Agent
@@ -36,7 +36,7 @@ def configure_training(expenv):
                                 [-lfenv.track_width * 1 / 3.0, lfenv.track_width * 1 / 3.0]])
     critic = DynamicBaseline(obsranges=placecell_range)
     expenv.agent = Agent(expenv.env,
-                         actor=Actor(placecell_range=None, num_neurons_per_dim=1, neuron_labels=["current Position", "next Position"], env=expenv.env),
+                         actor=SpikingNeurocontroller(placecell_range=None, num_neurons_per_dim=1, neuron_labels=["current Position", "next Position"], env=expenv.env),
                          critic=critic)
     expenv.penalty = -2.
     expenv.agent.actor.only_positive_input = True

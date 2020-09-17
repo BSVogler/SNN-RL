@@ -6,24 +6,20 @@ import pickle
 import sys
 from typing import Tuple, List, Dict, Callable, Optional, Union
 
-import gym
 import mongoengine
 import numpy as np
 import atexit
 import datetime
 
 from gym.envs.classic_control import CartPoleEnv
-
+from globalvalues import gv
 import draw
 import models.trainingrun as tg
-from globalvalues import gv
 from agent import Agent
 from lineFollowingEnvironment import LineFollowingEnv
-from critic import DynamicBaseline
 from lineFollowingEnvironment2 import LineFollowingEnv2
 from mongoengine import Document, FileField, ListField, StringField, BinaryField, IntField, DateTimeField, FloatField, \
     ReferenceField, disconnect, DictField
-import nest
 import json
 
 
@@ -49,8 +45,6 @@ class Experiment(Document):
 
     def __init__(self, *args, **values):
         super().__init__(*args, **values)
-        # reset nest
-        nest.ResetKernel()
         gv.init()
         self.printedbias = False
         self.env = None
@@ -127,18 +121,8 @@ class Experiment(Document):
         """Simulate one episode
         :return: True if everything went okay. False if training needs to be canceled
         """
-        nest.set_verbosity("M_WARNING")
         if self.episode > 0:
-            try:
-                self.agent.actor.connectome
-            except AttributeError:
-                pass
-            else:
-                #there is an error message when adding new connections, prevent it. Should not appear because we called reset?
-                nest.set_verbosity("M_ERROR")
-                nest.ResetKernel()
-                self.agent.actor.connectome.rebuild()
-                nest.set_verbosity("M_WARNING")
+           self.agent.prepare_episode()
 
         observation = self.env.reset()
         self.rewards.clear()
@@ -148,7 +132,7 @@ class Experiment(Document):
             if done:
                 break
         # extra simulation time to apply changes in last cycle before resetting
-        nest.Simulate(gv.cycle_length)
+        self.agent.post_episode()
         self.epslength.append(self.cycle_i)
 
         return self.post_episode()
@@ -195,8 +179,10 @@ class Experiment(Document):
             #eps.activation = list(np.average(np.array(self.agent.actor.log_activation), axis=0))
             eps.neuromodulator = self.agent.actor.log_m
             self.save_episode(eps, weights)
-            connectome = self.agent.actor.connectome
-            self.drawspikes()
+            try:
+                self.agent.actor.connectome.drawspikes()
+            except AttributeError:
+                pass
             self.save()
 
     def save_episode(self, eps, weights):
@@ -209,7 +195,6 @@ class Experiment(Document):
         """Trains the agent for given numbers"""
         # extend on existing recordings
         self.errsigs = np.full((self.episode + gv.num_episodes, gv.max_cycles), np.nan)
-        #nest.Prepare()
         for episode_training in range(gv.num_episodes):
             # episode_training=0
             # while self.totalCycleCounter < gv.max_cycles:
@@ -235,18 +220,16 @@ class Experiment(Document):
             if gv.num_plots > 0 and gv.num_episodes > gv.num_plots and self.episode % (
                     gv.num_episodes // gv.num_plots) == 0:
                 # draw.voltage(self.agent.actor.connectome.multimeter, persp="2d")
-                self.drawspikes()
+                try:
+                    self.agent.actor.connectome.drawspikes()
+                except AttributeError:
+                    pass
             self.episode += 1
         print(f"Cycles: {self.totalCycleCounter}")
 
-    def drawspikes(self):
-        connectome = self.agent.actor.connectome
-        draw.spikes(nest.GetStatus(connectome.spike_detector)[0]["events"],
-                    outsignal=connectome.get_outspikes(recent=False),
-                    output_ids=connectome.neur_ids_out)
-
-    def analysis_pole(self):
-        # self.agent.critic.draw(xaxis=3, yaxis=2)
+    def drawreport(self):
+        # self.agent.critic.draw(xaxis=0, yaxis=1)
+        filename = f"{self.id}.png" if self.id is not None else None
         try:
             connectome = self.agent.actor.connectome.conns
         except:
@@ -254,19 +237,6 @@ class Experiment(Document):
         draw.report(utility=self.errsigs,
                     weights=np.array(self.agent.actor.weightlog),
                     returnpereps=self.return_per_episode_sum,
-                    connections=connectome,
-                    env=self.env)
-
-    def analysis_linefollowing(self):
-        # self.agent.critic.draw(xaxis=0, yaxis=1)
-        filename = f"{self.id}.png" if self.id is not None else None
-        try:
-            connectome = self.agent.actor.connectome.conns
-        except:
-            connectome = None
-        draw.report(self.errsigs,
-                    self.agent.actor.weightlog,
-                    self.return_per_episode_sum,
                     connections=connectome,
                     filename=filename,
                     env=self.env)
@@ -303,9 +273,7 @@ class Experiment(Document):
         if gv.save_to_db:
             self.save()
         if isinstance(self.env, LineFollowingEnv) or isinstance(self.env, LineFollowingEnv2):
-            self.analysis_linefollowing()
-        else:
-            self.analysis_pole()
+            self.drawreport()
 
         self.env.close()
         # if not gv.render:
@@ -358,9 +326,7 @@ class Experiment(Document):
         gv.structural_plasticity = False
         gv.render = True
         gv.demo = True
-        nest.ResetKernel()
-        self.agent.actor.connectome.rebuild()
-        self.agent.actor.connectome.restorelastweights()
+        self.agent.prepare_episode()
         self.simulate_episode()
         gv = gv_old
 
@@ -480,7 +446,6 @@ def trainingrun(configurator: Callable = None, num_processes: int = 1, gridsearc
         result = gridsearch(num_processes, training, configurator)
     else:
         # if not a gridsearch
-        # nest.SetKernelStatus({"local_num_threads": num_processes})
         createexpdatadir()
         datasingleworker = {"training": training} if configurator is None else {"training": training,
                                                                                 "configurator": configurator}

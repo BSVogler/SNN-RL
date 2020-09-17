@@ -2,10 +2,15 @@ import collections
 import pickle
 from typing import List, Dict, Set, Tuple
 
-import nest
+try:
+    import nest
+except ImportError:
+    print("Neural simulator Nest not found (import nest). Only able to run the simplified architecture.")
+
 import numpy as np
 from nest.lib.hl_api_types import NodeCollection, SynapseCollection
 
+import draw
 from actor import Weightstorage
 from globalvalues import gv
 
@@ -58,6 +63,7 @@ class Connectome:
         self.neuron_labels: List[str] = neuron_labels
 
         # after initalizing fields construct
+        nest.set_verbosity("M_WARNING")
         self.rebuild(True)
         print("Training " + str(len(self.conns_nest)) + " weights")
 
@@ -122,7 +128,9 @@ class Connectome:
         self.conns = np.array(self.conns)
 
     def rebuild(self, initial=False):
-        """in intial phase create connections in front-end (neur_ids), always creates nest connections (back-end)"""
+        """in intial phase create connections in front-end (neur_ids), always creates nest connections (back-end). Keeps the weights."""
+        nest.set_verbosity("M_ERROR")
+        nest.ResetKernel()
         self.populations_nest.clear()
         self.create_input_layer(initial)
 
@@ -185,13 +193,15 @@ class Connectome:
         gv.voltageRecordings = set(self.neurons_nest_ex.tolist())
 
         # connection in front-end already established: now connect neurons in nest backend
-        #todo with nest udpate use a single call with numpy list self.conns_ex[:,0] (https://github.com/nest/nest-simulator/pull/1539)
-        for fromN, toN in self.conns_ex:
-            nest.Connect(nest.NodeCollection([fromN]), nest.NodeCollection([toN]),
-                         syn_spec={'synapse_model': 'stdp_dopamine_synapse_ex'}, conn_spec="one_to_one")
-        for fromN, toN in self.conns_in:
-            nest.Connect(nest.NodeCollection([fromN]), nest.NodeCollection([toN]),
-                         syn_spec={'synapse_model': 'stdp_dopamine_synapse_in'}, conn_spec="one_to_one")
+        nest.Connect(self.conns_ex[:,0],
+                     self.conns_ex[:,1],
+                     syn_spec={'synapse_model': 'stdp_dopamine_synapse_ex'},
+                     conn_spec="one_to_one")
+        if len(self.conns_in) > 0:
+            nest.Connect(self.conns_in[:,0],
+                         self.conns_in[:,1],
+                         syn_spec={'synapse_model': 'stdp_dopamine_synapse_in'},
+                         conn_spec="one_to_one")
 
         # update references to nest
         self.update_connections_nest()
@@ -214,6 +224,8 @@ class Connectome:
             self.restorelastweights()
             if gv.structural_plasticity and gv.random_reconnect:
                 self.random_reconnect()
+
+        nest.set_verbosity("M_WARNING")
 
     def set_inputactivation(self, rate: np.ndarray):
         """Set the activation levels of the input neurons."""
@@ -443,3 +455,8 @@ class Connectome:
                 synapse.set({"weight": gv.w0_min})
             # indices have changes so update everything
             self.update_connections_nest()
+
+    def drawspikes(self):
+        draw.spikes(nest.GetStatus(self.spike_detector)[0]["events"],
+                    outsignal=self.get_outspikes(recent=False),
+                    output_ids=self.neur_ids_out)

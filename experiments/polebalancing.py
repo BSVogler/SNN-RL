@@ -4,13 +4,15 @@ import gym
 
 #this fixes exp not beeing able to import because it is not in the pythonpath
 import os,sys,inspect
+
+
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
 import exp
+from SpikingNeuroController import SpikingNeurocontroller
 from agent import Agent
-from actor import Actor
 from globalvalues import gv
 import numpy as np
 
@@ -57,7 +59,7 @@ def configure_training(expenv: exp.Experiment):
     expenv.env.seed(gv.seed)
     critic = DynamicBaseline(obsranges=placecell_range)
     expenv.agent = Agent(expenv.env,
-                         actor=Actor(placecell_range=placecell_range, num_neurons_per_dim=num_neurons_per_dim, env=expenv.env),
+                         actor=SpikingNeurocontroller(placecell_range=placecell_range, num_neurons_per_dim=num_neurons_per_dim, env=expenv.env),
                          critic=critic)
     expenv.agent.placell_nneurons_per_dim = num_neurons_per_dim
     expenv.penalty = -50.
