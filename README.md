@@ -1,5 +1,7 @@
 # SNNexperiments
-Reinforcement learning framework for spiking neural networks actors with R-STDP for the master thesis "Training Spiking Neural Networks with Reinforcement Learning".
+Reinforcement learning framework for spiking neural networks actors with R-STDP for the master thesis "Training Spiking Neural Networks with Reinforcement Learning". The thesis is included in the repository.
+
+This is an Actor-Critic Reinforcement Learning Framework where the actor/controller is a neurocontroller using Spiking Neural Networks. The critic uses traditional episodic calcualted value iteration.
 
 ## Requirements
 Python 3.7 or 3.8
