@@ -1,18 +1,34 @@
-# SNNexperiments
+# SNN RL
 Reinforcement learning framework for spiking neural networks actors with R-STDP for the master thesis "Training Spiking Neural Networks with Reinforcement Learning". The thesis is included in the repository.
 
-This is an Actor-Critic Reinforcement Learning Framework where the actor/controller is a neurocontroller using Spiking Neural Networks. The critic uses traditional episodic calcualted value iteration.
+This is an actor-critic reinforcement learning framework where the actor/controller is a neurocontroller using Spiking Neural Networks. The critic uses traditional episodic calculated value iteration.
+
+### Features:
+- line following experiment
+- pole balancing with R-STDP
+- numeric approximation of the R-STDP algorithm
+- mongodb experiment tracking and monitoring
+
+
+### WIP features:
+- live training monitoring via websockets
+- interface for physical pole-balancing machine
+- interface to custom C++ back-end
 
 ## Requirements
-Python 3.7 or 3.8
+Python >=3.7
 
 ## Installation
 First, nest 3 needs to be installed.
 
 ### Compile NEST 3 on macOS:
+Easiest is to use brew:
+```bash
+brew install nest
+````
 
-From nest dir, replace :
-```
+From nest dir, replace:
+```bash
 cmake -DCMAKE_INSTALL_PREFIX:PATH=~/Studium/Masterarbeit/nest \
 -DCMAKE_C_COMPILER=/usr/local/bin/gcc-10\
 -DCMAKE_CXX_COMPILER=/usr/local/bin/g++-10 \
@@ -23,7 +39,9 @@ then `make install` and afterwards `source ~/.bashrc`
 
 ### Install NEST via Docker
 Alternatively install via the docker image by running nestdockerrun.sh or usin this line:
-```docker run --rm -it -e LOCAL_USER_ID=`id -u $USER` -v $(pwd):/opt/data -p 8080:8080 nestsim/nest:latest /bin/bash```
+```bash
+docker run --rm -it -e LOCAL_USER_ID=`id -u $USER` -v $(pwd):/opt/data -p 8080:8080 nestsim/nest:latest /bin/bash
+```
 
 then attach with
 
