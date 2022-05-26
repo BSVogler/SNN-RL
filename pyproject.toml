@@ -5,11 +5,12 @@ description = "A framework for designing spiking neural entwork reinforcement le
 authors = ["Benedikt S. Vogler <developer@benediktsvogler.com>"]
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.10"
-gym = "^0.19"
+python = ">=3.9,<3.11"
+gym = "^0.23.1"
+pygame = "^2.1.2" #for gym
 numpy = "^1.21.2"
 matplotlib = "^3.4.3"
-scikit-learn = "^0.24.2"
+scikit-learn = "^1.1.1"
 mongoengine = "^0.23.1"
 tornado = "^6.1"
 websockets = "^9.1"
