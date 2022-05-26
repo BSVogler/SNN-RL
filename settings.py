@@ -3,7 +3,7 @@ import typing
 
 
 class Settings:
-    workerdata = None # per training instance
+    workerdata: typing.Optional[dict] = None # to change parameters per training instance
     demo = False  # when set to true will only display and not learn or train. there are more setting to disabel training
     neuronLabelMap: typing.Dict[int, str] = {}  # map neuron ids to strings
     seed = 42
@@ -75,7 +75,7 @@ class Settings:
             nest.CopyModel('stdp_dopamine_synapse', 'stdp_dopamine_synapse_in', rstdp_syn_spec_inhibitory)
             # nest.SetDefaults("stdp_dopamine_synapse_in", rstdp_syn_spec_inhibitory)
         except ImportError:
-            print("Neural simulator Nest not found (import nest). Only able to run the simplified architecture.")
+            print("Neural simulator Nest backend not found (import nest).")
 
     @staticmethod
     def init():
@@ -90,7 +90,7 @@ class Settings:
             nest.EnableStructuralPlasticity()
             numproc = nest.GetKernelStatus(['total_num_virtual_procs'])[0]
         except ImportError:
-            print("Neural simulator Nest not found (import nest). Only able to run the simplified architecture.")
+            print("Neural simulator Nest backend not found (import nest).")
 
         np.random.seed(gv.seed)
         gv.pyrngs = [np.random.RandomState(s) for s in range(gv.seed, gv.seed + numproc)]

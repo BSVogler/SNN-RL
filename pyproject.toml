@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "insimor"
+version = "0.1.0"
+description = "A framework for designing spiking neural entwork reinforcement learning algorithms based on R-STDP."
+authors = ["Benedikt S. Vogler <developer@benediktsvogler.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.10"
+gym = "^0.19"
+numpy = "^1.21.2"
+matplotlib = "^3.4.3"
+scikit-learn = "^0.24.2"
+mongoengine = "^0.23.1"
+tornado = "^6.1"
+websockets = "^9.1"
+
+[tool.poetry.dev-dependencies]
+Adafruit-Blinka = "^6.13.0"
+adafruit-circuitpython-ads1x15 = "^2.2.8"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

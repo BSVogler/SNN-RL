@@ -6,14 +6,14 @@ current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfra
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 import exp
-from SpikingNeuroController import SpikingNeurocontroller
+from actors.spiking_nest import SpikingNest
 from agent import Agent
 from exp import Experiment
-from globalvalues import gv
+from settings import gv
 import numpy as np
 
 from critic import DynamicBaseline
-from lineFollowingEnvironment2 import LineFollowingEnv2
+from environments.lineFollowingEnvironment2 import LineFollowingEnv2
 
 
 def configure_training(expenv: Experiment):
@@ -46,7 +46,7 @@ def configure_training(expenv: Experiment):
     expenv.env.seed(gv.seed)
     critic = DynamicBaseline(obsranges=placecell_range)
     expenv.agent = Agent(expenv.env,
-                         actor=SpikingNeurocontroller(placecell_range=placecell_range, num_neurons_per_dim=num_neurons_per_dim, env=expenv.env),
+                         actor=SpikingNest(placecell_range=placecell_range, num_neurons_per_dim=num_neurons_per_dim, env=expenv.env),
                          critic=critic)
     expenv.agent.placell_nneurons_per_dim = num_neurons_per_dim
     expenv.penalty = 0.

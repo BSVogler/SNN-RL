@@ -3,7 +3,7 @@ import nest.raster_plot
 import numpy as np
 import matplotlib.pyplot as plt
 import draw
-import globalvalues as gv
+import settings as gv
 
 gv.configure_nest()
 nest.ResetKernel()
@@ -12,8 +12,8 @@ inputs = nest.Create("poisson_generator", 1)
 # introduce parrot neuron to fix limitation of devices with STDP synapses
 parrots = nest.Create("parrot_neuron", 1)
 nest.Connect(inputs, parrots)
-spike_detector = nest.Create('spike_detector')
-nest.Connect(parrots, spike_detector, 'all_to_all')
+spike_recorder = nest.Create('spike_recorder')
+nest.Connect(parrots, spike_recorder, 'all_to_all')
 out = nest.Create(type,1)
 
 vt = nest.Create('volume_transmitter')
@@ -37,10 +37,10 @@ weights.append(np.array(nest.GetStatus(conn, keys="weight")))
 nest.Simulate(1.)
 weights.append(np.array(nest.GetStatus(conn, keys="weight")))
 
-spikes = nest.GetStatus(spike_detector)[0]["events"]
+spikes = nest.GetStatus(spike_recorder)[0]["events"]
 draw.spikes(spikes)
 
-#nest.raster_plot.from_device(spike_detector, hist=True, hist_binwidth=40.,
+#nest.raster_plot.from_device(spike_recorder, hist=True, hist_binwidth=40.,
 #                             title='Repeated stimulation by Poisson generator')
 #nest.raster_plot.show()
 

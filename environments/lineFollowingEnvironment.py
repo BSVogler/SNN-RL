@@ -5,7 +5,7 @@ from gym import spaces, logger
 from gym.utils import seeding
 import numpy as np
 
-from globalvalues import gv
+from settings import gv
 
 
 class LineFollowingEnv(gym.Env):
@@ -51,7 +51,7 @@ class LineFollowingEnv(gym.Env):
         self.track = np.sin(np.linspace(0, 2 * np.pi, self.tracklength)) + self.width / 2
         self.trackPiece: List[Any] = [None] * self.tracklength
         self.bound = []
-        self.botpos = [0,0]
+        self.botpos = [0, 0]
 
         self.action_space = spaces.Box(np.array([0.0]), np.array([1]))
         self.observation_space = spaces.Box(np.array([0.0, 0.0]), np.array([self.width, self.width]), dtype=np.float32)
@@ -71,7 +71,7 @@ class LineFollowingEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def step(self, action):
+    def step(self, action: list[float]):
         assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
         self.previouspath[-1].append(self.botpos[0])
         self.botpos[0] += action[0] - 0.5
@@ -82,7 +82,7 @@ class LineFollowingEnv(gym.Env):
         done = reward <= 0
 
         if done:
-            #clamp so that every failing state is equal regarding reward
+            # clamp so that every failing state is equal regarding reward
             reward = 0
             if self.steps_beyond_done == 0:
                 logger.warn(

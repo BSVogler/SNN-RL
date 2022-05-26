@@ -6,7 +6,7 @@ from gym import spaces, logger
 from gym.utils import seeding
 import numpy as np
 
-from globalvalues import gv
+from settings import gv
 
 
 class LineFollowingEnv2(gym.Env):
@@ -42,10 +42,11 @@ class LineFollowingEnv2(gym.Env):
 
     metadata = {
         'render.modes': ['human', 'rgb_array'],
-        'video.frames_per_second': int(1000/gv.cycle_length)
+        'video.frames_per_second': int(1000 / gv.cycle_length)
     }
 
     segments = 12
+
     def __init__(self, absolute_observation=False):
         self.absolute_observation = absolute_observation
         self.tracklength = 600
@@ -54,10 +55,11 @@ class LineFollowingEnv2(gym.Env):
         self.track: List[float] = [0.0] * self.tracklength
         self.trackPiece: List[Any] = [None] * self.tracklength
         self.bound = []
-        self.botpos = [0, 0.0] #x, y
+        self.botpos = [0, 0.0]  # x, y
 
         self.action_space = spaces.Box(np.array([0.0]), np.array([1]))
-        self.observation_space = spaces.Box(np.array([0.0, 0.0]), np.array([self.track_width, self.track_width]), dtype=np.float32)
+        self.observation_space = spaces.Box(np.array([0.0, 0.0]), np.array([self.track_width, self.track_width]),
+                                            dtype=np.float32)
 
         self.seed()
         self.viewer = None
@@ -71,10 +73,10 @@ class LineFollowingEnv2(gym.Env):
         self.reset()
 
     def enable_grid(self):
-        self.grid_res = math.ceil(abs(self.grid_from-self.grid_to)) #count of lines
+        self.grid_res = math.ceil(abs(self.grid_from - self.grid_to))  # count of lines
 
     def update_state(self):
-        #current pos, next track pos
+        # current pos, next track pos
         self.state = (self.botpos[1], self.track[(self.botpos[0] + 1) % self.tracklength])
         return self.state
 
@@ -82,7 +84,7 @@ class LineFollowingEnv2(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-    def step(self, action):
+    def step(self, action: list[float]):
         assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
         self.previouspath[-1].append(self.botpos[1])
         self.botpos[1] += action[0] - 0.5
@@ -92,12 +94,12 @@ class LineFollowingEnv2(gym.Env):
         self.botpos[0] %= self.tracklength
         done = reward <= 0
 
-        #stop if not visible any more
-        if abs(self.botpos[1]) >= self.track_width/2:
+        # stop if not visible any more
+        if abs(self.botpos[1]) >= self.track_width / 2:
             done = True
 
         if done:
-            #clamp so that every failing state is equal regarding reward
+            # clamp so that every failing state is equal regarding reward
             reward = 0
             if self.steps_beyond_done == 0:
                 logger.warn(
@@ -116,19 +118,20 @@ class LineFollowingEnv2(gym.Env):
     def reset(self):
         """Reset the enviroment. Returns initial reward"""
         # self.state = self.np_random.uniform(low=-0.05, high=0.05, size=(4,))
-        #create new path
+        # create new path
         # track is between 0 and width
         seglength = int(self.tracklength // LineFollowingEnv2.segments)
         randomvar = self.track_width * 2 / 3.0
         for seg in range(LineFollowingEnv2.segments):
-            random = np.random.random_sample() * randomvar - randomvar/2 #centered at 0.
+            random = np.random.random_sample() * randomvar - randomvar / 2  # centered at 0.
 
-            for i in range(seg*seglength,(seg+1)*seglength):
+            for i in range(seg * seglength, (seg + 1) * seglength):
                 self.track[i] = random
 
         self.previouspath.append([])
         self.steps_beyond_done = None
-        self.botpos = [0, gv.pyrngs[0].uniform(0, self.track_width / 2) - self.track_width / 4]  # x index, y float # middle is self.width / 2
+        self.botpos = [0, gv.pyrngs[0].uniform(0,
+                                               self.track_width / 2) - self.track_width / 4]  # x index, y float # middle is self.width / 2
         self.update_state()
         if self.absolute_observation:
             return np.array(self.state)
@@ -145,21 +148,21 @@ class LineFollowingEnv2(gym.Env):
         if self.viewer is None:
             self.viewer = rendering.Viewer(screen_width, screen_height)
 
-            #grid
-            if self.grid_res>0:
-                gridstep = (self.grid_to-self.grid_from)/self.grid_res*unit_height
+            # grid
+            if self.grid_res > 0:
+                gridstep = (self.grid_to - self.grid_from) / self.grid_res * unit_height
                 self.grid.append(rendering.Line((0, centerY),
                                                 (screen_width, centerY)))
                 self.grid[0].set_color(.0, .9, .0)
                 self.viewer.add_geom(self.grid[0])
                 for y in range(self.grid_res):
-                    ypos = y*gridstep + self.grid_from * unit_height
-                    self.grid.append(rendering.Line((0, ypos+centerY),
-                                                    (screen_width, ypos+centerY)))
-                    self.grid[y+1].set_color(.8, .2, .2)
-                    self.viewer.add_geom(self.grid[y+1])
+                    ypos = y * gridstep + self.grid_from * unit_height
+                    self.grid.append(rendering.Line((0, ypos + centerY),
+                                                    (screen_width, ypos + centerY)))
+                    self.grid[y + 1].set_color(.8, .2, .2)
+                    self.viewer.add_geom(self.grid[y + 1])
 
-            #add cart
+            # add cart
             cartwidth = 4.0
             cartheight = 4.0
             l, r, t, b = -cartwidth / 2, cartwidth / 2, cartheight / 2, -cartheight / 2
@@ -190,26 +193,26 @@ class LineFollowingEnv2(gym.Env):
         if self.state is None:
             return None
 
-        #track
+        # track
         color = (.5, .5, .8)
         for i in range(0, self.tracklength):
             self.viewer.draw_line((i * unit_length,
-                                   +self.track[i] * unit_height+centerY),
-                                ((i + 1) * unit_length,
-                                 +self.track[(i + 1) % self.tracklength] * unit_height+centerY),
+                                   +self.track[i] * unit_height + centerY),
+                                  ((i + 1) * unit_length,
+                                   +self.track[(i + 1) % self.tracklength] * unit_height + centerY),
                                   color=color)
 
-        #trail
+        # trail
         for i, trial in enumerate(self.previouspath[-20:]):
             grayvalue = 1 - float(i) / len(self.previouspath[-20:])
             color = (grayvalue, grayvalue, grayvalue)
             for i in range(1, len(trial)):
-                self.viewer.draw_line(((i - 1) * unit_length, trial[i - 1] * unit_height+centerY),
-                                      ( i * unit_length, trial[i] * unit_height+centerY),
+                self.viewer.draw_line(((i - 1) * unit_length, trial[i - 1] * unit_height + centerY),
+                                      (i * unit_length, trial[i] * unit_height + centerY),
                                       color=color)
 
         cartx = self.botpos[0] * unit_length  # MIDDLE OF CART
-        self.carttrans.set_translation(cartx, self.botpos[1] * unit_height+centerY)
+        self.carttrans.set_translation(cartx, self.botpos[1] * unit_height + centerY)
         # self.poletrans.set_rotation(-x[2])
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')

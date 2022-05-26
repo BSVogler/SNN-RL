@@ -7,13 +7,13 @@ sys.path.insert(0, parent_dir)
 
 import exp
 from agent import Agent
-from exp import Experiment, trainingrun
-from globalvalues import gv
+from exp import Experiment
+from settings import gv
 import numpy as np
 
 from critic import DynamicBaseline
-from lineFollowingEnvironment2 import LineFollowingEnv2
-from symbolicactor import SymbolicActor
+from environments.lineFollowingEnvironment2 import LineFollowingEnv2
+from actors.numericpyactor import NumericPyActor
 
 
 def configure_training(expenv: Experiment):
@@ -46,8 +46,8 @@ def configure_training(expenv: Experiment):
     expenv.env.seed(gv.seed)
     critic = DynamicBaseline(obsranges=placecell_range, state_labels=state_labels)
     expenv.agent = Agent(expenv.env,
-                         actor=SymbolicActor(placecell_range=placecell_range, num_neurons_per_dim=num_neurons_per_dim,
-                                             env=expenv.env),
+                         actor=NumericPyActor(placecell_range=placecell_range, num_neurons_per_dim=num_neurons_per_dim,
+                                              env=expenv.env),
                          critic=critic)
     expenv.agent.placell_nneurons_per_dim = num_neurons_per_dim
     expenv.penalty = 0.

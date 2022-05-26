@@ -5,12 +5,14 @@ from typing import Dict, List, Union
 import matplotlib.pyplot as plt
 import numpy as np
 
-import fremauxfilter
-from actor import Weightstorage
-from globalvalues import gv
+from actors import fremauxfilter
+from actors.actor import Weightstorage
+from settings import gv
 import datetime
 from matplotlib.colors import LightSource
 
+
+# a module of helperfunctions to plot various statistics
 
 def voltage(measurements, persp="3d"):
     """
@@ -53,7 +55,7 @@ def spikes(spikes_nest: Dict, outsignal: List[List[float]], output_ids: List[int
     :return:
     """
     last_spiketime: int = spikes_nest["times"][-1]
-    lastvalid = np.arange(0, last_spiketime, gv.cycle_length)[-1] #lazy hack
+    lastvalid = np.arange(0, last_spiketime, gv.cycle_length)[-1]  # lazy hack
     # create list of signals from nest format
     spiketimes = {}  # dicts are only filled for non-outspikes
     colors = []
@@ -70,7 +72,7 @@ def spikes(spikes_nest: Dict, outsignal: List[List[float]], output_ids: List[int
                 spiketimes[neurid] = []
                 # sort into categories
                 if neurid in output_ids:
-                    colors.append(list(mcolors.TABLEAU_COLORS)[colorcounter%10])
+                    colors.append(list(mcolors.TABLEAU_COLORS)[colorcounter % 10])
                     colorcounter += 1
                 else:
                     colors.append("black")
@@ -97,7 +99,7 @@ def spikes(spikes_nest: Dict, outsignal: List[List[float]], output_ids: List[int
         # only draw xticks if not noo much
         plt.xticks(xticks)
     plt.grid()
-    plt.margins(x=0.03)#kinda misaligned because it does not start spiking at 0 and last cycle time
+    plt.margins(x=0.03)  # kinda misaligned because it does not start spiking at 0 and last cycle time
     plt.ylabel("Neuron")
     plt.xlabel("time [ms]")
     plt.title('Spike Events per Neuron')
@@ -159,8 +161,8 @@ def filtered_signal(last_spiketime: int, spikes_per_id: Dict[str, List[float]]):
 def read_out_activity(last_spiketime: int, spikes_per_id: Dict[str, List[float]], filtered_signal=None):
     """draws a plot showing the activity of the out neurons when read."""
     # data for activity diagram
-    activity_in_cycle = np.zeros((len(spikes_per_id),#yaxis
-                                  int(last_spiketime // gv.cycle_length) + 1))#time axis
+    activity_in_cycle = np.zeros((len(spikes_per_id),  # yaxis
+                                  int(last_spiketime // gv.cycle_length) + 1))  # time axis
     nidx = 0
     # for each neuron
     for spiketimes in spikes_per_id.values():
@@ -194,7 +196,7 @@ def read_out_activity(last_spiketime: int, spikes_per_id: Dict[str, List[float]]
         plt.title(f"Sampled Activity Out-Neurons (Scaling ({scaling:.2f})")
     else:
         plt.title(f"Sampled Activity Out-Neurons")
-    #todo use neuron output id
+    # todo use neuron output id
     labels = None if len(spikes_per_id) > 5 else "Number of Spikes per Cycle"
     # draw
     plt.plot(sample_times, activity_in_cycle.T, drawstyle='steps-post', label=labels)
@@ -303,7 +305,8 @@ def utilities_over_time(utils):
     plt.show()
 
 
-def report(utility, weights: Union[List[Weightstorage], np.ndarray], returnpereps, connections: np.ndarray, filename=None,
+def report(utility, weights: Union[List[Weightstorage], np.ndarray], returnpereps, connections: np.ndarray,
+           filename=None,
            env=None):
     """
     Draw a report consisting of many parts

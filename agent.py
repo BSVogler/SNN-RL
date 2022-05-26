@@ -1,47 +1,29 @@
-from typing import List, Dict, Tuple
+from actors.trainable import Trainable
+
 try:
     import nest
 except ImportError:
-    print("Neural simulator Nest not found (import nest). Only able to run the simplified architecture.")
+    print("Neural simulator Nest backend not found (import nest).")
 
-from actor import Actor, Weightstorage
 from critic import AbstractCritic
-from globalvalues import gv
 
 
-class Agent:
-    def __init__(self, environment, actor: Actor, critic: AbstractCritic):
+class Agent(Trainable):
+    """Here an agent implements the actor-critic RL pattern."""
+    def __init__(self, environment, actor: 'Actor', critic: AbstractCritic):
+        """Dependency injection constructor."""
         self.actor = actor
         self.critic: AbstractCritic = critic
         self.environment = environment
 
-    def get_action(self, time) -> List[float]:
-        return self.actor.get_action(time)
+    def post_cycle(self, cycle_num):
+        self.actor.post_cycle(cycle_num)
 
-    def end_cycle(self, cycle_num):
-        self.actor.end_cycle(cycle_num)
+    def post_episode(self, episode):
+        self.critic.post_episode(episode)
+        self.actor.post_episode(episode)#
 
-    def end_episode(self, episode):
-        self.critic.end_episode()
-        self.actor.end_episode(episode)
+    def post_experiment(self):
+        self.critic.post_experiment()
+        self.actor.post_experiment()
 
-    def prepare_episode(self):
-        try:
-            self.actor.connectome.rebuild()
-        except AttributeError:
-            pass
-
-    def post_episode(self):
-        try:
-            #only simulate if there is a connectome
-            self.actor.connectome
-            nest.Simulate(gv.cycle_length)
-        except AttributeError:
-            pass
-
-
-    def get_weights(self) -> Weightstorage:
-            try:
-                return self.actor.connectome.get_weights()
-            except:
-                return self.actor.placecellaction.copy()

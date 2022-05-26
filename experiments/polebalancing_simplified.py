@@ -1,18 +1,23 @@
+import asyncio
 import math
 
 import gym
 
-#this fixes exp not beeing able to import because it is not in the pythonpath
-import os,sys,inspect
+# this fixes exp not beeing able to import because it is not in the pythonpath
+import os, sys, inspect
+
+from actors.actor_comparator import Comparator
+from actors.insimor_simple import InsimorSimple
+
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
 import exp
 from agent import Agent
-from globalvalues import gv
+from settings import gv
 import numpy as np
-from symbolicactor import SymbolicActor
+from actors.numericpyactor import NumericPyActor
 from critic import DynamicBaseline
 
 
@@ -51,16 +56,19 @@ def configure_training(expenv: exp.Experiment):
                                np.array([7, 7, 15, 15])][int(gv.workerdata["num_cells"])]
     else:
         num_neurons_per_dim = np.array([5, 5, 7, 7])
-    neuron_labels = ["Cart Pos. +", "Cart Pos. -", "Cart Vel. +", "Cart Vel. -", "Pole Angle +",
-                     "Pole Angle -", "Pole Vel. +",
-                     "Pole Vel. -"]
+    neuron_labels = ["Cart Pos. +", "Cart Pos. -",
+                     "Cart Vel. +", "Cart Vel. -",
+                     "Pole Angle +", "Pole Angle -",
+                     "Pole Vel. +", "Pole Vel. -"]
     expenv.env = env
     expenv.env.seed(gv.seed)
     critic = DynamicBaseline(obsranges=placecell_range)
-    expenv.agent = Agent(expenv.env,
-                         actor=SymbolicActor(placecell_range=placecell_range, num_neurons_per_dim=num_neurons_per_dim,
-                                             env=expenv.env),
-                         critic=critic)
+    #Actorclass = NumericPyActor
+    Actorclass = Comparator
+    actor = Actorclass(InsimorSimple,NumericPyActor, placecell_range=placecell_range,
+                       num_neurons_per_dim=num_neurons_per_dim,
+                       env=expenv.env)
+    expenv.agent = Agent(expenv.env, actor=actor, critic=critic)
     expenv.agent.placell_nneurons_per_dim = num_neurons_per_dim
     expenv.penalty = -50.
     expenv.agent.actor.obsfactor = 400  # clamped if too big
@@ -69,6 +77,6 @@ def configure_training(expenv: exp.Experiment):
 
 if __name__ == "__main__":
     args = exp.parseargs()
-    single, res = exp.trainingrun(configure_training, num_processes=args.processes, gridsearchpath=args.gridsearch)
-    if single is not None:
-        single.agent.critic.draw(xaxis=2, yaxis=3)
+    single, res = asyncio.get_event_loop().run_until_complete(exp.trainingrun(configure_training, num_processes=args.processes, gridsearchpath=args.gridsearch))
+    # if single is not None:
+    #     single.agent.critic.draw(xaxis=2, yaxis=3)

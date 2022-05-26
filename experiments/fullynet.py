@@ -7,8 +7,8 @@ parent_dir = os.path.dirname(current_dir)
 sys.path.insert(0, parent_dir)
 
 import exp
-from SpikingNeuroController import SpikingNeurocontroller
-from globalvalues import gv
+from actors.spiking_nest import SpikingNest
+from settings import gv
 import numpy as np
 
 def configure_training(expenv):
@@ -22,7 +22,7 @@ def configure_training(expenv):
     gv.render = False
     gv.structural_plasticity = False
     gv.random_reconnect = True
-    expenv.createLineFollowing(SpikingNeurocontroller(num_inputneurons=2, neuron_labels=["error pos", "error neg"]))
+    expenv.createLineFollowing(SpikingNest(num_inputneurons=2, neuron_labels=["error pos", "error neg"]))
     expenv.agent.actor.obsfactor = np.array([800 for x in range(2)])  # clamped anyway
 
 if __name__ == "__main__":
